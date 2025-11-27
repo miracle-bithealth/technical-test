@@ -12,7 +12,7 @@ class EmbeddingService:
     
     def __init__(self, embedding_dim: int = 128):
         self._embedding_dim = embedding_dim
-        logger.info(f"test intialze embedding service with dimention {embedding_dim}")
+        # logger.info(f"test intialze embedding service with dimention {embedding_dim}")
     
     def embed(self, text: str) -> list[float]:
         if not text or not text.strip():
@@ -63,7 +63,7 @@ class RagWorkflowService:
         workflow.add_edge("answer", END)
         
         self._chain = workflow.compile()
-        logger.info("RAG workflow initialized")
+        # logger.info("RAG workflow initialized")
     
     def ask(self, question: str) -> dict:
         if not question or not question.strip():

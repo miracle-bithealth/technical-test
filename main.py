@@ -37,7 +37,7 @@ def get_vector_store(settings: Settings = Depends(get_settings)) -> VectorStoreR
         try:
             _vector_store = QdrantVectorStore(settings)
             _is_qdrant_ready = True
-            logger.warning("qrant connect, using connection")
+            logger.warning("qrant connect, using qdrant")
         except VectorStoreError as e:
             logger.warning(f"check qdrant connection its failed, fallback to in-memory store: {e}")
             _vector_store = InMemoryVectorStore(settings.embedding_dim)
@@ -65,13 +65,9 @@ async def lifespan(app: FastAPI):
         embedding_service=embedding_service,
         search_limit=settings.vector_search_limit
     )
-    logger.info("RAG application started successfully")
-    yield
-    logger.info("Shutting down RAG application")
 
 app = FastAPI(title="Learning RAG Demo", lifespan=lifespan)
 
-# --- ROUTES ---
 @app.post("/ask", response_model=QuestionResponse)
 def ask_question(
     req: QuestionRequest,
@@ -104,28 +100,28 @@ def add_document(
         doc_id = str(uuid.uuid4())
         embedding = embedding_service.embed(req.text)
         vector_store.add_document(doc_id, req.text, embedding)
-        logger.info(f"Document added successfully with ID: {doc_id}")
+        # logger.info(f"Document added successfully with ID: {doc_id}")
         return DocumentAddedResponse(id=doc_id, status="added")
     except (VectorStoreError, EmbeddingError) as e:
-        logger.error(f"Failed to add document: {e}")
+        logger.error(f"Dailed to add document: {e}")
         raise
     except Exception as e:
-        logger.error(f"Unexpected error in add endpoint: {e}")
+        logger.error(f"unexpected error in add endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/status", response_model=StatusResponse)
-def status(
-    request: Request,
-    vector_store: VectorStoreRepository = Depends(get_vector_store)
-):
-    try:
-        doc_count = vector_store.get_document_count()
-        graph_ready = hasattr(request.app.state, "rag_workflow") and request.app.state.rag_workflow is not None
-        return StatusResponse(
-            qdrant_ready=_is_qdrant_ready,
-            in_memory_docs_count=doc_count,
-            graph_ready=graph_ready
-        )
-    except Exception as e:
-        logger.error(f"Error in status endpoint: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.get("/status", response_model=StatusResponse)
+# def status(
+#     request: Request,
+#     vector_store: VectorStoreRepository = Depends(get_vector_store)
+# ):
+#     try:
+#         doc_count = vector_store.get_document_count()
+#         graph_ready = hasattr(request.app.state, "rag_workflow") and request.app.state.rag_workflow is not None
+#         return StatusResponse(
+#             qdrant_ready=_is_qdrant_ready,
+#             in_memory_docs_count=doc_count,
+#             graph_ready=graph_ready
+#         )
+#     except Exception as e:
+#         logger.error(f"Error in status endpoint: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))

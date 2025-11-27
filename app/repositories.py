@@ -116,7 +116,7 @@ class InMemoryVectorStore(VectorStoreRepository):
         self._storage: dict[str, dict] = {}
         self._lock = threading.Lock()
         self._expected_dim = expected_dim
-        logger.info("initialized in-memory vector store (fallback dari failed qdrant connection)")
+        # logger.info("initialized in-memory vector store (fallback dari failed qdrant connection)")
     
     def add_document(self, id: str, text: str, embedding: list[float]) -> str:
         if not id:
